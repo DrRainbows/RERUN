@@ -59,6 +59,23 @@ class Handler(BaseHTTPRequestHandler):
             except (ValueError, IndexError):
                 result = {"error": "bad channel"}
             self._send(200, json.dumps(result), "application/json")
+        elif self.path == "/schedule.txt":
+            # pipe-delimited feed for the VLC Lua extension:
+            # number|name|now-playing|offset-seconds|path
+            lib = engine.load_library()
+            durs = engine.Durations()
+            now = dt.datetime.now()
+            lines = []
+            for ch in engine.load_channels():
+                sched = engine.schedule_at(ch, lib, durs, now)
+                if sched:
+                    lines.append("|".join([
+                        str(ch["number"]), ch["name"],
+                        engine.display_name(sched["item"]),
+                        str(int(sched["offset"])),
+                        sched["item"]["path"]]))
+            durs.save()
+            self._send(200, "\n".join(lines), "text/plain; charset=utf-8")
         else:
             self._send(404, "static")
 
