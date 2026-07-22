@@ -1,0 +1,7 @@
+{
+  "roots": ["D:\\Media\\TV", "D:\\Media\\Movies"],
+  "vlc": "C:\\Program Files\\VideoLAN\\VLC\\vlc.exe",
+  "epoch": "2026-01-01T00:00:00",
+  "min_bytes": 26214400,
+  "fullscreen": false
+}

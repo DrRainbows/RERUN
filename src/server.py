@@ -29,11 +29,7 @@ def tune(number):
     durs.save()
     if not sched:
         return {"error": f"channel {number} resolved no items"}
-    cfg = engine.load_config()
-    args = [cfg["vlc"], "--fullscreen", "--no-video-title-show",
-            sched["item"]["path"], f":start-time={int(sched['offset'])}"]
-    for _t, item in sched["upcoming"][:3]:
-        args.append(item["path"])
+    args = engine.vlc_args(engine.load_config(), sched)
     with _vlc_lock:
         if _vlc_proc and _vlc_proc.poll() is None:
             _vlc_proc.terminate()

@@ -67,6 +67,17 @@ class Durations:
         self.dirty = 0
 
 
+def vlc_args(cfg, sched):
+    """Build the VLC invocation for a resolved schedule position."""
+    args = [cfg["vlc"], "--no-video-title-show", "--no-qt-video-autoresize"]
+    if cfg.get("fullscreen"):
+        args.append("--fullscreen")
+    args += [sched["item"]["path"], f":start-time={int(sched['offset'])}"]
+    for _t, item in sched["upcoming"][:3]:
+        args.append(item["path"])
+    return args
+
+
 def resolve_items(channel, library):
     """Channel definition -> ordered base playlist (before loop shuffling)."""
     picked = []
@@ -77,6 +88,14 @@ def resolve_items(channel, library):
                        and q in f"{i['title']} ({i['year']})"]
             if matches:
                 picked.append(max(matches, key=lambda m: m["size"]))
+    if "movies_all" in channel:
+        hits = []
+        for query in channel["movies_all"]:
+            q = query.lower().strip()
+            hits.extend(i for i in library if i["kind"] == "movie"
+                        and q in f"{i['title']} ({i['year']})")
+        hits.sort(key=lambda h: (h["year"], h["title"]))
+        picked.extend(hits)
     if "series" in channel:
         eps = [i for i in library if i["kind"] == "tv"
                and i["series"] in [s.lower() for s in channel["series"]]]
@@ -150,7 +169,9 @@ def schedule_at(channel, library, durs, when, lookahead=4):
 
 def display_name(item):
     if item["kind"] == "tv":
-        return (f"{item['series'].title()} "
+        import re as _re
+        series = _re.sub(r"\s+s\d+$", "", item["series"])
+        return (f"{series.title()} "
                 f"S{item['season']:02d}E{item['episode']:02d}")
     if item["kind"] == "movie":
         return f"{item['title'].title()} ({item['year']})"
