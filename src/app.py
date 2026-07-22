@@ -60,11 +60,28 @@ def http_tune(number):
         pass
 
 
+def already_running():
+    """Single-instance lock: the tray holds port 8101 for its lifetime."""
+    global _lock_sock
+    try:
+        _lock_sock = socket.socket()
+        _lock_sock.bind(("127.0.0.1", PORT + 1))
+        _lock_sock.listen(1)
+        return False
+    except OSError:
+        return True
+
+
 def tray():
+    if already_running():
+        # clicking the exe while the station is on = open the guide
+        viewer()
+        return
     if not server_alive():
         import server
         threading.Thread(target=server.main, args=(PORT,),
                          daemon=True).start()
+    spawn_self("--viewer")
     import engine
     import pystray
 
@@ -79,6 +96,7 @@ def tray():
     menu = pystray.Menu(
         pystray.MenuItem("Omniguide", lambda: spawn_self("--viewer"),
                          default=True),
+        pystray.MenuItem("TV mode", lambda: spawn_self("--tv")),
         pystray.MenuItem("Tune", pystray.Menu(*channel_items)),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Sign off", lambda icon: icon.stop()))
@@ -91,6 +109,9 @@ def tray():
 def main():
     if "--viewer" in sys.argv:
         viewer()
+    elif "--tv" in sys.argv:
+        import tv
+        tv.main()
     else:
         tray()
 
