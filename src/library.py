@@ -10,7 +10,10 @@ import os
 import re
 import sys
 
-HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if getattr(sys, "frozen", False):
+    HERE = os.path.dirname(sys.executable)
+else:
+    HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VIDEO_EXT = {".mp4", ".mkv", ".avi", ".m4v", ".wmv", ".mpg", ".mpeg",
              ".ts", ".webm", ".mov", ".flv"}
 

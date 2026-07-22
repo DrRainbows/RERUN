@@ -11,8 +11,12 @@ import json
 import os
 import random
 import subprocess
+import sys
 
-HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if getattr(sys, "frozen", False):
+    HERE = os.path.dirname(sys.executable)
+else:
+    HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DUR_CACHE = os.path.join(HERE, "durations.json")
 
 

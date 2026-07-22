@@ -5,3 +5,8 @@ __pycache__/
 *.pyc
 rerun.json
 
+.venv/
+build/
+dist/
+RERUN.exe
+

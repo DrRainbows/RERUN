@@ -2,10 +2,14 @@
 import datetime as dt
 import html
 import os
+import sys
 
 import engine
 
-HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if getattr(sys, "frozen", False):
+    HERE = os.path.dirname(sys.executable)
+else:
+    HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def fmt_min(sec):
