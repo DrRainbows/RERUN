@@ -35,6 +35,14 @@ def terminal_guide(only=None):
 
 
 def html_guide(only=None, out_path=None):
+    doc = html_guide_string(only=only)
+    out_path = out_path or os.path.join(HERE, "omniguide.html")
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(doc)
+    return out_path
+
+
+def html_guide_string(only=None, live=False):
     lib = engine.load_library()
     durs = engine.Durations()
     now = dt.datetime.now()
@@ -74,8 +82,32 @@ def html_guide(only=None, out_path=None):
             f'<td colspan="{span}"><div class="prog">{html.escape(name)}'
             f'<span class="joined">{joined}</span></div></td>'
             for span, name, joined in cells)
-        cell_html += (f'<tr><td class="chan"><span class="num">{ch["number"]}'
+        cell_html += (f'<tr class="row" data-ch="{ch["number"]}">'
+                      f'<td class="chan"><span class="num">{ch["number"]}'
                       f'</span><br>{html.escape(ch["name"])}</td>{tds}</tr>\n')
+
+    live_css = (".row { cursor: pointer; } "
+                ".row:hover td.chan { background: #1133aa; }" if live else "")
+    live_js = """
+<script>
+function tune(n) {
+  document.getElementById('status').textContent = 'TUNING ' + n + '...';
+  fetch('/tune/' + n).then(r => r.json()).then(d => {
+    document.getElementById('status').textContent = d.error ? d.error :
+      'CH ' + d.channel + ' ' + d.name + ' \\u00b7 ' + d.now +
+      ' \\u00b7 joined ' + d.offset_min + 'm in';
+  });
+}
+document.querySelectorAll('.row').forEach(r =>
+  r.addEventListener('click', () => tune(r.dataset.ch)));
+document.addEventListener('keydown', e => {
+  if (e.key >= '1' && e.key <= '9') tune(e.key);
+});
+setTimeout(() => location.reload(), 60000);
+</script>""" if live else ""
+    foot_note = ("click a channel or press its number to tune &middot; "
+                 '<span id="status"></span>' if live
+                 else "tune with: python src/tune.py &lt;channel&gt;")
 
     slot_html = "".join(f"<th>{s:%I:%M %p}</th>" for s in slots)
     doc = f"""<!DOCTYPE html>
@@ -104,14 +136,14 @@ def html_guide(only=None, out_path=None):
   .prog:hover {{ background: linear-gradient(#3355cc, #223388); }}
   .joined {{ color: #88ff88; font-size: 9px; }}
   .foot {{ margin-top: 12px; color: #667; font-size: 11px; }}
+  #status {{ color: #88ff88; }}
+  {live_css}
 </style></head><body>
 <div class="head"><span class="brand">RERUN</span>
 <span class="clock">{now:%A %B %d &middot; %I:%M %p} &middot; the station that's always on</span></div>
 <table><tr><th>CHANNEL</th>{slot_html}</tr>
 {cell_html}</table>
-<div class="foot">OMNIGUIDE &middot; tune with: python src/tune.py &lt;channel&gt;</div>
+<div class="foot">OMNIGUIDE &middot; {foot_note}</div>
+{live_js}
 </body></html>"""
-    out_path = out_path or os.path.join(HERE, "omniguide.html")
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(doc)
-    return out_path
+    return doc

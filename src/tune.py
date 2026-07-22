@@ -3,6 +3,8 @@
   python src/tune.py --scan         rebuild library.json
   python src/tune.py --guide        terminal guide (now/next per channel)
   python src/tune.py --html         generate + open the Omniguide grid
+  python src/tune.py --serve        LIVE Omniguide at localhost:8100 —
+                                    click rows / press 1-9 to tune VLC
   python src/tune.py 7              tune channel 7: VLC joins in progress
   add --only 1,6,7 to limit guide builds to specific channels
 """
@@ -67,6 +69,17 @@ def main():
             os.startfile(path)
         except OSError:
             pass
+        return 0
+    if args[0] == "--serve":
+        import server
+        port = 8100
+        if "--port" in args:
+            port = int(args[args.index("--port") + 1])
+        try:
+            os.startfile(f"http://localhost:{port}")
+        except OSError:
+            pass
+        server.main(port)
         return 0
     return tune(int(args[0]))
 
