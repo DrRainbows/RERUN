@@ -72,8 +72,14 @@ class Durations:
 
 
 def vlc_args(cfg, sched):
-    """Build the VLC invocation for a resolved schedule position."""
-    args = [cfg["vlc"], "--no-video-title-show", "--no-qt-video-autoresize"]
+    """Build the VLC invocation for a resolved schedule position.
+
+    --one-instance: flips hand the new program to the already-open window
+    over VLC's IPC (offset included), so the window - and wherever the
+    viewer dragged it - never goes away between channels.
+    """
+    args = [cfg["vlc"], "--one-instance", "--no-video-title-show",
+            "--no-qt-video-autoresize"]
     if cfg.get("fullscreen"):
         args.append("--fullscreen")
     args += [sched["item"]["path"], f":start-time={int(sched['offset'])}"]

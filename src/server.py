@@ -29,10 +29,10 @@ def tune(number):
     durs.save()
     if not sched:
         return {"error": f"channel {number} resolved no items"}
+    # --one-instance: this "new process" just forwards the program to the
+    # existing VLC window and exits - no kill, no window movement, ever.
     args = engine.vlc_args(engine.load_config(), sched)
     with _vlc_lock:
-        if _vlc_proc and _vlc_proc.poll() is None:
-            _vlc_proc.terminate()
         _vlc_proc = subprocess.Popen(args)
     return {"channel": number, "name": ch["name"],
             "now": engine.display_name(sched["item"]),
